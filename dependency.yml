@@ -1,0 +1,14 @@
+name: dataprocess.api
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - fastapi=0.78.0=pyhd8ed1ab_0
+  - passlib=1.7.4=pyhd3eb1b0_0
+  - python=3.9.7=h6244533_1
+  - python-jose=3.3.0=pyh6c4a22f_1
+  - python-multipart=0.0.5=py_0
+  - sqlalchemy=1.4.32=py39h2bbff1b_0
+  - toml=0.10.2=pyhd8ed1ab_0
+  - uvicorn=0.17.6=py39hcbf5309_1
