@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 from dpapi.main import app
 
 
-class SiteRoutesCase(unittest.TestCase):
+class AnnoAPITestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.client = TestClient(app)
 

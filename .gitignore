@@ -137,3 +137,5 @@ migrations/
 # config
 config/
 /demo/
+/migration/
+/alembic.ini

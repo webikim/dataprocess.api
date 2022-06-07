@@ -41,12 +41,16 @@ def anno_delete(param: AnnoMeta):
 # FIXME refine schema for param, when data structure from front is fixed
 @router.post('/anno/save')
 def anno_save(param: Anno):
+    # FIXME next will be unnecessary, when data structure is fixed <<
     param.data['path'] = param.path
     param.data['name'] = param.name
     if 'bbox_show' in param.data.keys():
         del param.data['bbox_show']
     if 'bbox_update' in param.data.keys():
         del param.data['bbox_update']
+    if 'status' in param.data.keys():
+        del param.data['status']
+    # FIXME >>
     out_dir = os.path.join(out_path, param.path)
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
@@ -94,5 +98,5 @@ def label_get(path: str, name: str):
             with open(os.path.join(label_dir, filename + '.json'), 'r', encoding='utf8') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"Error occurred - ", e)
+            raise FILE_EXCEPTION
     return {}

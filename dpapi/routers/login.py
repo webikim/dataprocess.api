@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from dpapi import config, oauth2_scheme
 from dpapi.db import get_db, user_crud
 from dpapi.schema import login
-from dpapi.schema.login import TokenData, UserCreate, UserBase, Token, UserCheck, UserInDB
+from dpapi.schema.login import UserCreate, UserBase, Token, UserCheck, UserInDB, Login
 
 TOKEN_TYPE_BEARER = "bearer"
 CREDENTIALS_EXCEPTION = HTTPException(
@@ -62,16 +62,23 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_user_id(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, config['SECRET_KEY'], algorithms=[config['ALGORITHM']])
-        username: str = payload.get("sub")
-        if username is None:
-            raise CREDENTIALS_EXCEPTION
-        token_data = TokenData(email=username)
+        userid: str = payload.get("sub")
+        return userid
     except JWTError:
         raise CREDENTIALS_EXCEPTION
-    user = user_crud.get_user_by_email(db, token_data.email)
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        userid = get_user_id(token)
+        if userid is None:
+            raise CREDENTIALS_EXCEPTION
+    except JWTError:
+        raise CREDENTIALS_EXCEPTION
+    user = user_crud.get_user_by_id(db, int(userid))
     if user is None:
         raise CREDENTIALS_EXCEPTION
     return user
@@ -90,7 +97,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         raise LOGIN_EXCEPTION
     access_token_expires = timedelta(minutes=config['ACCESS_TOKEN_EXPIRE_MINUTES'])
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"id": user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -117,11 +124,11 @@ async def read_users_me(current_user: UserBase = Depends(get_current_active_user
     return current_user
 
 
-@router.get("/login", response_model=login.Token)
-async def login(email: str, password: str, db: Session = Depends(get_db)):
-    db_user = authenticate_user(db, email, password)
+@router.post("/login", response_model=login.Token)
+async def login(param: Login, db: Session = Depends(get_db)):
+    db_user = authenticate_user(db, param.email, param.password)
     access_token_expires = timedelta(minutes=config['ACCESS_TOKEN_EXPIRE_MINUTES'])
     access_token = create_access_token(
-        data={"sub": db_user.email}, expires_delta=access_token_expires
+        data={"sub": str(db_user.id)}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type=TOKEN_TYPE_BEARER)

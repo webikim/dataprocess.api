@@ -1,6 +1,10 @@
+from pydantic import BaseModel
 from typing import Union
 
-from pydantic import BaseModel
+
+class Login(BaseModel):
+    email: str
+    password: str
 
 
 class UserBase(BaseModel):
